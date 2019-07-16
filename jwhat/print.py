@@ -24,9 +24,9 @@ def print_data(collapsed_data, current_tabbing=0, current_depth=0, max_depth=-1,
 
     elif isinstance(collapsed_data, dict):
 
-        max_key_len = _get_max_key_length(collapsed_data)
+        max_key_len = _get_max_key_length_dict(collapsed_data)
 
-        for i, key in enumerate(collapsed_data):
+        for i, (key, item) in enumerate(collapsed_data.items()):
 
             tabbing_dict_key = 0 if i == 0 else current_tabbing
             sep = _get_separator(i, len(collapsed_data))
@@ -37,12 +37,28 @@ def print_data(collapsed_data, current_tabbing=0, current_depth=0, max_depth=-1,
             print_wrapper(key_and_separators, color, no_color=no_color)
 
             tabbing_dict_value = tabbing_dict_key + len(key_and_separators)
-            print_data(collapsed_data[key], current_tabbing=tabbing_dict_value, current_depth=current_depth+1,
+            print_data(item, current_tabbing=tabbing_dict_value, current_depth=current_depth+1,
                        max_depth=max_depth, color_picker=color_picker)
 
     elif isinstance(collapsed_data, list):
-        for item in collapsed_data:
-            print_data(item, current_tabbing=current_tabbing+1, current_depth=current_depth+1, max_depth=max_depth, color_picker=color_picker)
+
+        max_key_len = _get_max_key_length_list(collapsed_data)
+
+        for i, item in enumerate(collapsed_data):
+
+            key = "{%d}" % i
+
+            tabbing_dict_key = 0 if i == 0 else current_tabbing
+            sep = _get_separator(i, len(collapsed_data))
+
+            key_padding = _get_key_padding(len(key), max_key_len)
+            key_and_separators = _get_tabbed_text(sep + key_padding + key, tabbing_dict_key)
+
+            print_wrapper(key_and_separators, color, no_color=no_color)
+
+            tabbing_dict_value = tabbing_dict_key + len(key_and_separators)
+            print_data(item, current_tabbing=tabbing_dict_value, current_depth=current_depth+1,
+                       max_depth=max_depth, color_picker=color_picker)
 
     else:
         assert False
@@ -65,8 +81,11 @@ def _get_separator(index, nb_items):
 def _get_key_padding(key_len, max_key_len):
     return SEP_FIRST_SINGLE * (max_key_len - key_len)
 
-def _get_max_key_length(data_dict):
+def _get_max_key_length_dict(data_dict):
     return max(len(k) for k in data_dict.keys())
+
+def _get_max_key_length_list(data_list):
+    return max(len(str(i)) for i in range(len(data_list)))
 
 def print_wrapper(text, color, no_color):
 
