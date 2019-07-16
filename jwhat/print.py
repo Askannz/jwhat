@@ -12,8 +12,6 @@ def print_data(collapsed_data, current_tabbing=0, current_depth=0, max_depth=-1,
     if color_picker is None:
         color_picker = ColorPicker()
 
-    color = color_picker.get_color()
-
     if isinstance(collapsed_data, CollapsedItem):
         print_wrapper(": " + str(collapsed_data) + "\n", "white", no_color)
         return
@@ -24,6 +22,7 @@ def print_data(collapsed_data, current_tabbing=0, current_depth=0, max_depth=-1,
 
     elif isinstance(collapsed_data, dict):
 
+        color = color_picker.get_color()
         max_key_len = _get_max_key_length_dict(collapsed_data)
 
         for i, (key, item) in enumerate(collapsed_data.items()):
@@ -42,6 +41,7 @@ def print_data(collapsed_data, current_tabbing=0, current_depth=0, max_depth=-1,
 
     elif isinstance(collapsed_data, list):
 
+        color = color_picker.get_color()
         max_key_len = _get_max_key_length_list(collapsed_data)
 
         for i, item in enumerate(collapsed_data):
@@ -98,7 +98,7 @@ class ColorPicker:
 
     def __init__(self):
 
-        self.COLORS = ["red", "green", "blue", "magenta", "cyan", "yellow", "grey"]
+        self.COLORS = ["red", "green", "blue", "magenta", "cyan", "yellow"]
         self.index = 0
 
     def get_color(self):
