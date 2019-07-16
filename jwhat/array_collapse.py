@@ -1,4 +1,5 @@
 from .CollapsedData import CollapsedPrimitive, CollapsedEmptyArray, CollapsedArray
+from .primitives import is_primitive
 
 
 def try_collapse_array(array):
@@ -32,8 +33,12 @@ def _collapse_item(item):
     if isinstance(item, list):
         success, collapsed_item = try_collapse_array(item)
     else:
-        collapsed_item = CollapsedPrimitive(item)
-        success = True
+        if is_primitive(item):
+            collapsed_item = CollapsedPrimitive(item)
+            success = True
+        else:
+            collapsed_item = None
+            success = False
 
     return success, collapsed_item
 
