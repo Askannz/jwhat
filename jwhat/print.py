@@ -8,17 +8,20 @@ CHAR_BRANCH_BOTTOM = "┬"
 CHAR_BRANCH_LEFT = "├"
 CHAR_ANGLE = "└"
 
-def print_data(collapsed_data, current_depth=0, current_delta=0, parents_deltas=[], max_depth=-1, no_color=False, color_picker=None):
+def print_data(collapsed_data, current_depth=0, current_delta=0, parents_deltas=[], max_depth=-1, no_color=False, compact=False, last=False, color_picker=None):
 
     if color_picker is None:
         color_picker = ColorPicker()
 
+    parent_bars_txt = _get_parents_bars_txt(parents_deltas, no_color)
+    collapsed_end_newline = "\n" + parent_bars_txt if last or not compact else ""
+
     if isinstance(collapsed_data, CollapsedItem):
-        print(": " + str(collapsed_data))
+        print(": " + str(collapsed_data) + collapsed_end_newline)
         return
 
     if max_depth != -1 and current_depth == max_depth:
-        text = colored_wrapper(": <max depth reached>", "white", no_color)
+        text = colored_wrapper(": <max depth reached>", "white", no_color) + collapsed_end_newline
         print(text)
         return
 
@@ -27,9 +30,11 @@ def print_data(collapsed_data, current_depth=0, current_delta=0, parents_deltas=
         color = color_picker.get_color()
         nb_items = len(collapsed_data)
         max_key_len = max(map(len, collapsed_data.keys()))
+        are_all_collapsed_items = all(map(lambda it: isinstance(it, CollapsedItem), collapsed_data.values()))
+        new_compact = are_all_collapsed_items
 
         for i, (key, item) in enumerate(collapsed_data.items()):
-            _print_data_with_key(key, item, current_depth, current_delta, color, i, nb_items, max_key_len, parents_deltas, max_depth, no_color, color_picker)
+            _print_data_with_key(key, item, current_depth, current_delta, color, i, nb_items, max_key_len, parents_deltas, max_depth, no_color, new_compact, last, color_picker)
 
     elif isinstance(collapsed_data, list):
 
@@ -38,24 +43,25 @@ def print_data(collapsed_data, current_depth=0, current_delta=0, parents_deltas=
 
         keys_list = ["{%d}" % i for i in range(nb_items)]
         max_key_len = max(map(len, keys_list))
+        are_all_collapsed_items = all(map(lambda it: isinstance(it, CollapsedItem), collapsed_data))
+        new_compact = are_all_collapsed_items
 
         for i, (key, item) in enumerate(zip(keys_list, collapsed_data)):
-            _print_data_with_key(key, item, current_depth, current_delta, color, i, nb_items, max_key_len, parents_deltas, max_depth, no_color, color_picker)
+            _print_data_with_key(key, item, current_depth, current_delta, color, i, nb_items, max_key_len, parents_deltas, max_depth, no_color, new_compact, last, color_picker)
 
-    else:
-        assert False
 
-def _print_data_with_key(key, item, current_depth, current_delta, color, i, nb_items, max_key_len, parents_deltas, max_depth, no_color, color_picker):
+def _print_data_with_key(key, item, current_depth, current_delta, color, i, nb_items, max_key_len, parents_deltas, max_depth, no_color, compact, last, color_picker):
 
     formatted_key_txt = _get_formatted_key(key, current_delta, color, i, nb_items, max_key_len, parents_deltas, no_color)
     print(formatted_key_txt, end="")
 
+    last = i == nb_items - 1
     new_delta = max_key_len
-    new_parent_color = "" if i == nb_items - 1 else color
+    new_parent_color = "" if last else color
     new_parents_deltas = parents_deltas + [(current_delta, new_parent_color)]
     new_depth = current_depth + 1
 
-    print_data(item, new_depth, new_delta, new_parents_deltas, max_depth, no_color=no_color, color_picker=color_picker)
+    print_data(item, new_depth, new_delta, new_parents_deltas, max_depth, no_color=no_color, compact=compact, last=last, color_picker=color_picker)
 
 def _get_formatted_key(key, current_delta, color, index, nb_items, max_key_len, parents_deltas, no_color):
 
@@ -68,12 +74,7 @@ def _get_formatted_key(key, current_delta, color, index, nb_items, max_key_len, 
 
     else:
 
-        parent_bars_txt = ""
-        for padding, parent_color in parents_deltas:
-            if parent_color == "":
-                parent_bars_txt += " " * (padding + 1)
-            else:
-                parent_bars_txt += " " * padding + colored_wrapper(CHAR_VERT, parent_color, no_color)
+        parent_bars_txt = _get_parents_bars_txt(parents_deltas, no_color)
 
         space_padding = " " * current_delta
 
@@ -83,6 +84,17 @@ def _get_formatted_key(key, current_delta, color, index, nb_items, max_key_len, 
         txt = parent_bars_txt + colored_wrapper(space_padding + first_char_branch + padding_branch + key, color, no_color)
 
     return txt
+
+def _get_parents_bars_txt(parents_deltas, no_color):
+
+    parent_bars_txt = ""
+    for padding, parent_color in parents_deltas:
+        if parent_color == "":
+            parent_bars_txt += " " * (padding + 1)
+        else:
+            parent_bars_txt += " " * padding + colored_wrapper(CHAR_VERT, parent_color, no_color)
+
+    return parent_bars_txt
 
 def colored_wrapper(text, color, no_color):
     if no_color:
