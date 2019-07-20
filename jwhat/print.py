@@ -1,5 +1,5 @@
 from copy import deepcopy
-from termcolor import cprint, colored
+from termcolor import colored
 from .primitives import is_primitive
 from .CollapsedData import CollapsedItem
 
@@ -14,48 +14,41 @@ def print_data(config, collapsed_data, context=None):
     if context is None:
         context = _make_initial_context()
 
-    parent_bars_txt = _get_parents_bars_txt(context["parents_deltas"], config["no_color"])
-    collapsed_end_newline = "\n" + parent_bars_txt if context["last"] or not context["compact"] else ""
+    is_collapsed_item = isinstance(collapsed_data, CollapsedItem)
+    is_max_depth_leaf = config["max_depth"] != -1 and context["current_depth"] == config["max_depth"]
+    is_dict = isinstance(collapsed_data, dict)
+    is_list = isinstance(collapsed_data, list)
 
-    if isinstance(collapsed_data, CollapsedItem):
-        print(": " + str(collapsed_data) + collapsed_end_newline)
-        return
+    # Leaf
+    if is_collapsed_item or is_max_depth_leaf:
 
-    if config["max_depth"] != -1 and context["current_depth"] == config["max_depth"]:
-        text = colored_wrapper(": <max depth reached>", "white", config["no_color"]) + collapsed_end_newline
-        print(text)
-        return
+        parent_bars_txt = _get_parents_bars_txt(context["parents_deltas"], config["no_color"])
+        collapsed_end_newline = "\n" + parent_bars_txt if context["last"] or not context["compact"] else ""
 
-    if isinstance(collapsed_data, dict):
+        if is_collapsed_item:
+            print(": " + str(collapsed_data) + collapsed_end_newline)
 
-        color = context["color_picker"].get_color()
-        nb_items = len(collapsed_data)
-        max_key_len = max(map(len, collapsed_data.keys()))
-        are_all_items_collapsed = all(map(lambda it: isinstance(it, CollapsedItem), collapsed_data.values()))
+        elif is_max_depth_leaf:
+            text = colored_wrapper(": <max depth reached>", "white", config["no_color"]) + collapsed_end_newline
+            print(text)
 
-        for i, (key, item) in enumerate(collapsed_data.items()):
-
-            iterable_context = {
-                "key_string": key,
-                "color": color,
-                "index": i,
-                "nb_items": nb_items,
-                "max_key_len": max_key_len,
-                "are_all_items_collapsed": are_all_items_collapsed
-            }
-
-            _print_data_with_key(config, item, iterable_context, context)
-
-    elif isinstance(collapsed_data, list):
+    # Node
+    elif is_dict or is_list:
 
         color = context["color_picker"].get_color()
         nb_items = len(collapsed_data)
 
-        keys_list = ["{%d}" % i for i in range(nb_items)]
+        if is_dict:
+            keys_list = collapsed_data.keys()
+            values_list = collapsed_data.values()
+        elif is_list:
+            keys_list = ["{%d}" % i for i in range(nb_items)]
+            values_list = collapsed_data
+
         max_key_len = max(map(len, keys_list))
-        are_all_items_collapsed = all(map(lambda it: isinstance(it, CollapsedItem), collapsed_data))
+        are_all_items_collapsed = all(map(lambda it: isinstance(it, CollapsedItem), values_list))
 
-        for i, (key, item) in enumerate(zip(keys_list, collapsed_data)):
+        for i, (key, item) in enumerate(zip(keys_list, values_list)):
 
             iterable_context = {
                 "key_string": key,
@@ -65,7 +58,7 @@ def print_data(config, collapsed_data, context=None):
                 "max_key_len": max_key_len,
                 "are_all_items_collapsed": are_all_items_collapsed
             }
-    
+
             _print_data_with_key(config, item, iterable_context, context)
 
 
