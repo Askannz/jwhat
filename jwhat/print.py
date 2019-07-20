@@ -35,7 +35,7 @@ def print_data(config, collapsed_data, context=None):
     # Node
     elif is_dict or is_list:
 
-        color = context["color_picker"].get_color()
+        color = _get_current_color(context)
         nb_items = len(collapsed_data)
 
         if is_dict:
@@ -117,10 +117,15 @@ def _get_parents_bars_txt(parents_deltas, no_color):
 
     return parent_bars_txt
 
+def _get_current_color(context):
+    COLORS = ["red", "green", "blue", "magenta", "cyan", "yellow"]
+    current_depth = context["current_depth"]
+    return COLORS[current_depth % len(COLORS)]
+
+
 def _make_initial_context():
 
     context = {}
-    context["color_picker"] = ColorPicker()
     context["current_depth"] = 0
     context["current_delta"] = 0
     context["parents_deltas"] = []
@@ -134,16 +139,3 @@ def colored_wrapper(text, color, no_color):
         return text
     else:
         return colored(text, color)
-
-class ColorPicker:
-
-    def __init__(self):
-
-        self.COLORS = ["red", "green", "blue", "magenta", "cyan", "yellow"]
-        self.index = 0
-
-    def get_color(self):
-
-        color = self.COLORS[self.index]
-        self.index = (self.index + 1) % len(self.COLORS)
-        return color
