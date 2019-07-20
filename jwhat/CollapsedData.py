@@ -41,8 +41,8 @@ class CollapsedEmptyArray(CollapsedItem):
         if self.shape == [0]:
             return "[]"
         else:
-            shape_str = ",".join(str(d) for d in self.shape)
-            return "[empty (%s)]" % shape_str
+            shape_str = "x".join(str(d) for d in self.shape)
+            return "[(%s) empty]" % shape_str
 
     def __eq__(self, other):
 
@@ -63,8 +63,8 @@ class CollapsedArray(CollapsedItem):
         return CollapsedArray(self.data_type, new_shape)
 
     def __str__(self):
-        shape_str = ",".join(str(d) for d in self.shape)
-        return "[%s (%s)]" % (self.data_type, shape_str)
+        shape_str = "x".join(str(d) for d in self.shape)
+        return "[(%s) %s]" % (shape_str, self.data_type)
 
     def __eq__(self, other):
 

@@ -27,6 +27,7 @@ def main():
 
     config = {"max_depth": args.max_depth, "no_color": args.no_color}
 
+    print("")
     print_data(config, collapsed_data)
 
 
