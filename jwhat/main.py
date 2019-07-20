@@ -25,7 +25,9 @@ def main():
 
     collapsed_data = collapse_data(data)
 
-    print_data(collapsed_data, no_color=args.no_color, max_depth=args.max_depth)
+    config = {"max_depth": args.max_depth, "no_color": args.no_color}
+
+    print_data(config, collapsed_data)
 
 
 if __name__ == "__main__":
